@@ -1,4 +1,4 @@
-#define IR D7
+#define IR D6
 
 bool ir;
 
