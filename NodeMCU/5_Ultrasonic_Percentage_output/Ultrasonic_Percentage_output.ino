@@ -1,4 +1,4 @@
-#define TankBase 40
+#define TankBase 60
 #define TankTop 5
 
 const int trigPin = D4;
