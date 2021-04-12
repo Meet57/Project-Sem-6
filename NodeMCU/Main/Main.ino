@@ -106,7 +106,7 @@ void loop() {
   if(distance < 20){
     motor = "HIGH";
   }else{
-    motor = "HIGH";
+//    motor = motorStatus(1);
     if(distance > 90){
       motor = "LOW";
     }
@@ -116,5 +116,5 @@ void loop() {
   Serial.println(res);
 
   Serial.println("LOOP END");
-  delay(3000);
+  delay(100);
 }
