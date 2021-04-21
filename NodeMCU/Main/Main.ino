@@ -37,20 +37,7 @@ String getResponseString(String URL){
   return "Error";
 }
 
-String motorStatus(int id){
-  if (WiFi.status() == WL_CONNECTED) {
-    HTTPClient http;
-    String URL = "https://smartwaterpump.herokuapp.com/motor/";
-    http.begin(URL+id,thumbprint);
-    int httpCode = http.GET();
-    String payload = http.getString();
-    http.end();
-    return payload;
-  }
-  return "Error";
-}
-
-String uploadData(int id,int lower,int upper,String motor){
+String uploadData(int id,int lower,int upper,int motor){
   if (WiFi.status() == WL_CONNECTED) {
     HTTPClient http;
     String URL = "https://smartwaterpump.herokuapp.com/add/";
@@ -65,56 +52,50 @@ String uploadData(int id,int lower,int upper,String motor){
   return "Error";
 }
 
-int UltrasonicLength(int tri,int echo){
-  digitalWrite(tri, LOW);
-  delayMicroseconds(2);
-
-  digitalWrite(tri, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(tri, LOW);
-
-  duration = pulseIn(echo, HIGH);
-
-  distance = duration * 0.034 / 2;
-  
-  if(distance <= TankTop){
-    return 100;
-  }
-
-  if(distance >= TankBase){
-    return 0;
-  }
-
-  return 100 - ((distance-TankTop)*100)/(TankBase-TankTop);
-}
 
 void setup() {
-  pinMode(D4, OUTPUT); 
-  pinMode(D5, INPUT); 
-  
+  pinMode(BUILTIN_LED, OUTPUT);
   Serial.begin(9600);
   connectWifi();
 }
 
-void loop() {
-  Serial.println("LOOP STARTED");
-  distance = UltrasonicLength(D4,D5);
-  Serial.println(distance);
+void loop(){
+  int mode = getResponseString("https://smartwaterpump.herokuapp.com/mode/1").toInt();
+  int motor = getResponseString("https://smartwaterpump.herokuapp.com/motor/1").toInt();
+  int tank1 = random(0,100);
+  int tank2 = random(0,100);
   
-  String motor;
-
-  if(distance < 20){
-    motor = "HIGH";
-  }else{
-//    motor = motorStatus(1);
-    if(distance > 90){
-      motor = "LOW";
+  if(mode == 0){
+    
+    Serial.println("---Auto---");
+    if(tank1 > 95 || tank2 < 20){
+      motor = 0;
+      digitalWrite(BUILTIN_LED,HIGH);
     }
-  }
-  
-  String res = uploadData(id,10,distance,motor);
-  Serial.println(res);
+    if(tank1 < 30 && tank2 >20){
+      motor = 1;
+      digitalWrite(BUILTIN_LED,LOW);
+    }
 
-  Serial.println("LOOP END");
-  delay(100);
+    uploadData(1,tank1,tank2,motor);
+    
+  }else{
+    Serial.println("---Manual---");
+
+    if(tank1 > 98){
+      motor = 0;
+    }
+    if(tank2 < 5){
+      motor = 0;
+    }
+
+    uploadData(1,tank1,tank2,motor);
+
+    if(motor == 1){
+      digitalWrite(BUILTIN_LED,LOW);
+    }else{
+      digitalWrite(BUILTIN_LED,HIGH);
+    }
+    
+  }
 }
